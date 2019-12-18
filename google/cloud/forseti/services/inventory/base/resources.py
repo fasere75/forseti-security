@@ -65,7 +65,7 @@ def from_root_id(client, root_id, root=True):
     root_map = {
         'organizations': ResourceManagerOrganization.fetch,
         'projects': ResourceManagerProject.fetch,
-        'folders': ResourceManagerFolder.fetch,
+        'folders': ResourceManagerFolder.fetch
     }
 
     for prefix, func in root_map.items():
@@ -704,6 +704,42 @@ class ResourceManagerOrganization(resource_class_factory('organization', None)):
             self.add_warning(err_msg)
             return None
 
+    @cached('access_policy')
+    def get_access_policy(self, client=None):
+        """Gets access policy for this organization.
+
+        Args:
+            client (object): GCP API client.
+
+        Returns:
+            dict: Access Policy.
+        """
+        try:
+            data, _ = client.iter_crm_organization_access_policies(self['name'])
+            return data
+        except (api_errors.ApiExecutionError, ResourceNotSupported) as e:
+            LOGGER.warning('Could not get Access Policy: %s', e)
+            self.add_warning(e)
+            return None
+
+    @cached('org_policy')
+    def get_org_policy(self, client=None):
+        """Gets Organization policy for this organization.
+
+        Args:
+            client (object): GCP API client.
+
+        Returns:
+            dict: Organization Policy.
+        """
+        try:
+            data, _ = client.iter_crm_organization_org_policies(self['name'])
+            return data
+        except (api_errors.ApiExecutionError, ResourceNotSupported) as e:
+            LOGGER.warning('Could not get Org policy: %s', e)
+            self.add_warning(e)
+            return None
+
     def has_directory_resource_id(self):
         """Whether this organization has a directoryCustomerId.
 
@@ -776,7 +812,7 @@ class ResourceManagerFolder(resource_class_factory('folder', None)):
         Args:
             client (object): GCP API client.
             resource_key (str): resource key to fetch.
-            root (bool): Set this as the root resource in the hierarchy.
+            root (bool): ResourceManagerFolderSet this as the root resource in the hierarchy.
 
         Returns:
             Folder: Folder resource.
@@ -828,6 +864,24 @@ class ResourceManagerFolder(resource_class_factory('folder', None)):
                        (self.key(), e))
             LOGGER.warning(err_msg)
             self.add_warning(err_msg)
+            return None
+
+    @cached('org_policy')
+    def get_org_policy(self, client=None):
+        """Gets Organization policy for this organization.
+
+        Args:
+            client (object): GCP API client.
+
+        Returns:
+            dict: Organization Policy.
+        """
+        try:
+            data, _ = client.iter_crm_organization_org_policies(self['name'])
+            return data
+        except (api_errors.ApiExecutionError, ResourceNotSupported) as e:
+            LOGGER.warning('Could not get Org policy: %s', e)
+            self.add_warning(e)
             return None
 
 
@@ -896,6 +950,24 @@ class ResourceManagerProject(resource_class_factory('project', 'projectId')):
                 return None
 
         return {}
+
+    @cached('org_policy')
+    def get_org_policy(self, client=None):
+        """Gets Organization policy for this organization.
+
+        Args:
+            client (object): GCP API client.
+
+        Returns:
+            dict: Organization Policy.
+        """
+        try:
+            data, _ = client.iter_crm_organization_org_policies(self['name'])
+            return data
+        except (api_errors.ApiExecutionError, ResourceNotSupported) as e:
+            LOGGER.warning('Could not get Org policy: %s', e)
+            self.add_warning(e)
+            return None
 
     @cached('billing_info')
     def get_billing_info(self, client=None):
@@ -1100,42 +1172,6 @@ class BigqueryDataSet(resource_class_factory('dataset', 'id')):
                        '%s' % (self.key(), self.parent().key(), e))
             LOGGER.warning(err_msg)
             self.add_warning(err_msg)
-            return None
-
-    @cached('org_policy')
-    def get_org_policy(self, client=None):
-        """Gets Organization policy for this organization.
-
-        Args:
-            client (object): GCP API client.
-
-        Returns:
-            dict: Organization Policy.
-        """
-        try:
-            data, _ = client.iter_crm_organization_org_policies(self['name'])
-            return data
-        except (api_errors.ApiExecutionError, ResourceNotSupported) as e:
-            LOGGER.warning('Could not get Org policy: %s', e)
-            self.add_warning(e)
-            return None
-
-    @cached('access_policy')
-    def get_access_policy(self, client=None):
-        """Gets access policy for this organization.
-
-        Args:
-            client (object): GCP API client.
-
-        Returns:
-            dict: Access Policy.
-        """
-        try:
-            data, _ = client.iter_crm_organization_access_policies(self['name'])
-            return data
-        except (api_errors.ApiExecutionError, ResourceNotSupported) as e:
-            LOGGER.warning('Could not get Access Policy: %s', e)
-            self.add_warning(e)
             return None
 
     @cached('dataset_policy')
