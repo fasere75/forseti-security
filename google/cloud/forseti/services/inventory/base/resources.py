@@ -715,7 +715,7 @@ class ResourceManagerOrganization(resource_class_factory('organization', None)):
             dict: Access Policy.
         """
         try:
-            data, _ = client.iter_crm_organization_access_policies(self['name'])
+            data, _ = client.fetch_crm_organization_access_policy(self['name'])
             return data
         except (api_errors.ApiExecutionError, ResourceNotSupported) as e:
             LOGGER.warning('Could not get Access Policy: %s', e)
@@ -2173,7 +2173,7 @@ class BillingAccountIterator(resource_iter_class_factory(
 
 class ResourceManagerOrganizationAccessPolicyIterator(
         resource_iter_class_factory(
-            api_method_name='iter_crm_organization_access_policies',
+            api_method_name='fetch_crm_organization_access_policy',
             resource_name='crm_access_policy',
             api_method_arg_key='name')):
     """The Resource iterator implementation for Access Policy."""

@@ -1148,22 +1148,25 @@ class CaiApiClientImpl(gcp.ApiClientImpl):
         for project in resources:
             yield project
 
-    def iter_crm_organization_access_policies(self, org_id):
-        """Iterate access policies in an organization from Cloud Asset data.
+    def fetch_crm_organization_access_policy(self, org_id):
+        """Gets access policy in an organization from Cloud Asset data.
 
         Args:
             org_id (str): id of the organization to get the Policy.
 
-        Yields:
-            dict: Generator of access policies for an organization.
+        Returns:
+            dict: Access Policy of Organization.
         """
-        resources = self.dao.iter_cai_assets(
+        resource = self.dao.fetch_cai_asset(
             ContentTypes.access_policy,
             'cloudresourcemanager.googleapis.com/Organization',
             '//cloudresourcemanager.googleapis.com/{}'.format(org_id),
             self.engine)
-        for access_policy in resources:
-            yield access_policy
+        if resource:
+            return resource
+
+        # Clusters with no Access policy return an empty dict.
+        return {}, None
 
     def iter_crm_organization_access_levels(self, access_policy_id):
         """Iterate access levels from Cloud Asset data.
