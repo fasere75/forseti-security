@@ -166,7 +166,7 @@ class SecurityCenterClient(object):
               object: An API response containing all the CSCC findings.
         """
         response = self.repository.findings.list(parent=source_id,
-                                                 filter=[state=ACTIVE],
+                                                 filter="state=\"ACTIVE\"",
                                                  pageSize=500)
         return response
 
@@ -194,6 +194,6 @@ class SecurityCenterClient(object):
         except (errors.HttpError, HttpLib2Error) as e:
             LOGGER.exception('Unable to update CSCC finding: Resource: %s',
                              finding)
-            violation_data = (
-                finding.get('source_properties').get('violation_data'))
+            # violation_data = (
+            #     finding.get('source_properties').get('violation_data'))
             raise api_errors.ApiExecutionError(violation_data, e)
