@@ -165,7 +165,9 @@ class SecurityCenterClient(object):
           Returns:
               object: An API response containing all the CSCC findings.
         """
-        response = self.repository.findings.list(parent=source_id)
+        response = self.repository.findings.list(parent=source_id,
+                                                 filter=[state=ACTIVE],
+                                                 pageSize=500)
         return response
 
     def update_finding(self, finding, finding_id, source_id=None):
