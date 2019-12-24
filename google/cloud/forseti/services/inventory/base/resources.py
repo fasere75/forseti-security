@@ -733,6 +733,8 @@ class ResourceManagerOrganization(resource_class_factory('organization', None)):
             dict: Organization Policy.
         """
         try:
+            a = client.iter_crm_organization_org_policies(self['name'])
+            b = list(a)
             data, _ = client.iter_crm_organization_org_policies(self['name'])
             return data
         except (api_errors.ApiExecutionError, ResourceNotSupported) as e:
@@ -1979,7 +1981,6 @@ class ResourceManagerOrganizationOrgPolicyIterator(resource_iter_class_factory(
         resource_name='crm_org_policy',
         api_method_arg_key='name')):
     """The Resource iterator for CRM Organization Org Policies."""
-
 
 # Project iterator requires looking up parent type, so cannot use class factory.
 class ResourceManagerProjectIterator(ResourceIterator):
