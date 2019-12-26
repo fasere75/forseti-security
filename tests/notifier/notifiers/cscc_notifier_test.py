@@ -113,7 +113,6 @@ class CsccNotifierTest(scanner_base_db.ScannerBaseDbTestCase):
         self.assertEqual(expected_findings,
                           ast.literal_eval(json.dumps(finding_results)))
 
-
     def test_api_is_invoked_correctly(self):
 
         notifier = cscc_notifier.CsccNotifier(self.api_quota, None)
@@ -287,3 +286,132 @@ class CsccNotifierTest(scanner_base_db.ScannerBaseDbTestCase):
         notifier = cscc_notifier.CsccNotifier('abc', self.api_quota)
         notifier._send_findings_to_cscc(violations, source_id)
         self.assertFalse(mock_list.update_finding.called)
+
+    @mock.patch('google.cloud.forseti.common.gcp_api.securitycenter.SecurityCenterClient')
+    def test_outdated_findings_are_not_found(self, mock_list):
+        source_id = 'organizations/123/sources/456'
+
+        violations = [{
+            'violation_hash': '311',
+            'resource_name': 'readme1',
+            'resource_data': {u'ipv4Enabled': True,
+                              u'authorizedNetworks': [
+                                  {
+                                      u'expirationTime': u'1970-01-01T00:00:00Z',
+                                      u'kind': u'sql#aclEntry',
+                                      u'value': u'0.0.0.0/0'}]},
+            'resource_id': 'readme1',
+            'violation_type': 'CLOUD_SQL_VIOLATION',
+            'created_at_datetime': '2018-03-26T04:37:51Z',
+            'scanner_index_id': 122,
+            'rule_name': 'Cloud SQL rule to search for publicly exposed instances',
+            'full_name': 'organization/123/project/cicd-henry/cloudsqlinstance/456/',
+            'rule_index': 0,
+            'violation_data': {u'instance_name': u'readme1',
+                               u'require_ssl': False,
+                               u'project_id': u'readme1',
+                               u'authorized_networks': [u'0.0.0.0/0'],
+                               u'full_name': u'organization/123/project/cicd-henry/cloudsqlinstance/456/'},
+            'id': 99185,
+            'resource_type': 'cloudsqlinstance'}]
+
+        NEW_FINDINGS = [['abc',
+                            {'category': 'BUCKET_VIOLATION',
+                             'resource_name': 'organization/123/project/inventoryscanner/bucket/isthispublic/',
+                             'name': 'organizations/123/sources/560/findings/abc',
+                             'parent': 'organizations/123/sources/560',
+                             'event_time': '2019-03-12T16:06:19Z',
+                             'state': 'ACTIVE',
+                             'source_properties': {'source': 'FORSETI',
+                                                   'rule_name': 'Bucket acls rule to search for public buckets',
+                                                   'inventory_index_id': 789,
+                                                   'resource_data': '{"bucket": "isthispublic", "entity": "allUsers", "id": "isthispublic/allUsers", "role": "READER"}',
+                                                   'db_source': 'table:violations/id:94953',
+                                                   'rule_index': 0,
+                                                   'violation_data': '{"bucket": "isthispublic", "domain": "", "email": "", "entity": "allUsers", "full_name": "organization/123/project/inventoryscanner/bucket/isthispublic/", "project_id": "inventoryscanner-henry", "role": "READER"}',
+                                                   'resource_id': 'isthispublic',
+                                                   'scanner_index_id': 1551913369403591,
+                                                   'resource_type': 'bucket'}}]]
+
+        FINDINGS_IN_CSCC = [['abc',
+                            {'category': 'BUCKET_VIOLATION',
+                             'resource_name': 'organization/123/project/inventoryscanner/bucket/isthispublic/',
+                             'name': 'organizations/123/sources/560/findings/abc',
+                             'parent': 'organizations/123/sources/560',
+                             'event_time': '2019-03-12T16:06:19Z',
+                             'state': 'ACTIVE',
+                             'source_properties': {'source': 'FORSETI',
+                                                   'rule_name': 'Bucket acls rule to search for public buckets',
+                                                   'inventory_index_id': 789,
+                                                   'resource_data': '{"bucket": "isthispublic", "entity": "allUsers", "id": "isthispublic/allUsers", "role": "READER"}',
+                                                   'db_source': 'table:violations/id:94953',
+                                                   'rule_index': 0,
+                                                   'violation_data': '{"bucket": "isthispublic", "domain": "", "email": "", "entity": "allUsers", "full_name": "organization/123/project/inventoryscanner/bucket/isthispublic/", "project_id": "inventoryscanner-henry", "role": "READER"}',
+                                                   'resource_id': 'isthispublic',
+                                                   'scanner_index_id': 1551913369403591,
+                                                   'resource_type': 'bucket'}}]]
+
+        mock_list.list_findings.return_value = {'readTime': '111'}
+        notifier = cscc_notifier.CsccNotifier('abc', self.api_quota)
+        a = notifier.find_inactive_findings(NEW_FINDINGS, FINDINGS_IN_CSCC)
+        print('a:', a)
+        print('s', notifier.find_inactive_findings(NEW_FINDINGS, FINDINGS_IN_CSCC))
+        # notifier._send_findings_to_cscc(violations, source_id)
+        # self.assertTrue(mock_list.finding_data['state'], 'ACTIVE')
+
+    @mock.patch('google.cloud.forseti.common.gcp_api.securitycenter.SecurityCenterClient')
+    def test_empty_list_api_response(self, mock_list):
+        source_id = 'organizations/123/sources/456'
+
+        violations = [{
+            'violation_hash': '311',
+            'resource_name': 'readme1',
+            'resource_data': {u'ipv4Enabled': True,
+                              u'authorizedNetworks': [
+                                  {
+                                      u'expirationTime': u'1970-01-01T00:00:00Z',
+                                      u'kind': u'sql#aclEntry',
+                                      u'value': u'0.0.0.0/0'}]},
+            'resource_id': 'readme1',
+            'violation_type': 'CLOUD_SQL_VIOLATION',
+            'created_at_datetime': '2018-03-26T04:37:51Z',
+            'scanner_index_id': 122,
+            'rule_name': 'Cloud SQL rule to search for publicly exposed instances',
+            'full_name': 'organization/123/project/cicd-henry/cloudsqlinstance/456/',
+            'rule_index': 0,
+            'violation_data': {u'instance_name': u'readme1',
+                               u'require_ssl': False,
+                               u'project_id': u'readme1',
+                               u'authorized_networks': [u'0.0.0.0/0'],
+                               u'full_name': u'organization/123/project/cicd-henry/cloudsqlinstance/456/'},
+            'id': 99185,
+            'resource_type': 'cloudsqlinstance'}]
+
+        RESPONSE = [{'finding': {'name': 'organizations/abc/sources/123/findings/456',
+                            'parent': 'organizations/abc/sources/123',
+                            'resourceName': 'organization/abc/project/release-2-25-0/iam_policy/project:test/',
+                            'state': 'INACTIVE',
+                            'category': 'CONFIG_VALIDATOR_VIOLATION',
+                            'sourceProperties': {'scanner_index_id': 456,
+                                                 'resource_id': '531967619494',
+                                                 'db_source': 'table:violations/id:1905587',
+                                                 'inventory_index_id': 890,
+                                                 'resource_type': 'cloudresourcemanager.googleapis.com/Project',
+                                                 'rule_index': 0,
+                                                 'source': 'FORSETI',
+                                                 'resource_data': '{"bindings": '
+                                                                  '[{"members": ["serviceAccount:service-543@gcp-sa-cloudasset.iam.gserviceaccount.com"], '
+                                                                  '"role": "roles/cloudasset.serviceAgent"}], '
+                                                                  '"etag": "BwWZmeJsulE="}',
+                                                 'rule_name': 'iam_allow_roles',
+                                                 'violation_data': '{"resource": "//cloudresourcemanager.googleapis.com/projects/789", "role": "roles/iam.serviceAccountAdmin"}'},
+                            'securityMarks': {'name': 'organizations/abc/sources/123/findings/456/securityMarks'},
+                            'eventTime': '2019-12-26T02:50:38Z',
+                            'createTime': '2019-12-13T19:42:06.893Z'},
+                'resource': {'name': 'organization/abc/project/test/iam_policy/project:test/'}}]
+
+        mock_list.list_findings.return_value = RESPONSE
+        notifier = cscc_notifier.CsccNotifier('abc', self.api_quota)
+        notifier._send_findings_to_cscc(violations, source_id)
+        self.assertFalse(mock_list.find_inactive_findings.called)
+

@@ -191,9 +191,6 @@ class CsccNotifier(object):
             finding_id = finding_list[0]
             to_be_updated_finding = finding_list[1]
 
-            if to_be_updated_finding['state'] == 'INACTIVE':
-                continue
-
             if finding_id not in new_findings_map:
                 to_be_updated_finding['state'] = 'INACTIVE'
                 current_time = date_time.get_utc_now_datetime()
@@ -239,32 +236,39 @@ class CsccNotifier(object):
                     finding_id = name[-32:]
                     formatted_cscc_findings.append([finding_id, finding_data])
 
-            inactive_findings = self.find_inactive_findings(
-                new_findings,
-                formatted_cscc_findings)
+                    if finding_data.get('state') != "INACTIVE":
+                        LOGGER.debug('Active finding was retrieved.')
+                        self.find_inactive_findings(new_findings,
+                                                    formatted_cscc_findings)
+                    else:
+                        LOGGER.debug('Inactive finding was retrieved.')
 
-            for finding_list in new_findings:
-                finding_id = finding_list[0]
-                finding = finding_list[1]
-                LOGGER.debug('Creating finding CSCC:\n%s.', finding)
-                try:
-                    client.create_finding(finding, source_id=source_id,
-                                          finding_id=finding_id)
-                except api_errors.ApiExecutionError:
-                    LOGGER.exception('Encountered CSCC API error.')
-                    continue
-
-            for finding_list in inactive_findings:
-                finding_id = finding_list[0]
-                finding = finding_list[1]
-                LOGGER.debug('Updating finding CSCC:\n%s.', finding)
-                try:
-                    client.update_finding(finding,
-                                          finding_id,
-                                          source_id=source_id)
-                except api_errors.ApiExecutionError:
-                    LOGGER.exception('Encountered CSCC API error.')
-                    continue
+            # inactive_findings = self.find_inactive_findings(
+            #     new_findings,
+            #     formatted_cscc_findings)
+            #
+            # for finding_list in new_findings:
+            #     finding_id = finding_list[0]
+            #     finding = finding_list[1]
+            #     LOGGER.debug('Creating finding CSCC:\n%s.', finding)
+            #     try:
+            #         client.create_finding(finding, source_id=source_id,
+            #                               finding_id=finding_id)
+            #     except api_errors.ApiExecutionError:
+            #         LOGGER.exception('Encountered CSCC API error.')
+            #         continue
+            #
+            # for finding_list in inactive_findings:
+            #     finding_id = finding_list[0]
+            #     finding = finding_list[1]
+            #     LOGGER.debug('Updating finding CSCC:\n%s.', finding)
+            #     try:
+            #         client.update_finding(finding,
+            #                               finding_id,
+            #                               source_id=source_id)
+            #     except api_errors.ApiExecutionError:
+            #         LOGGER.exception('Encountered CSCC API error.')
+            #         continue
 
             return
 

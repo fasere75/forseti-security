@@ -13,6 +13,7 @@
 # limitations under the License.
 
 """Tests the Security Center API client."""
+import ast
 import json
 import unittest
 import unittest.mock as mock
@@ -63,6 +64,23 @@ class SecurityCenterTest(unittest_utils.ForsetiTestCase):
             self.securitycenter_client.create_finding(
                 fake_finding,
                 source_id=self.source_id)
+
+    def test_list_findings_retrieves_active_findings(self):
+        """Test list cscc findings."""
+
+        EXPECTED_CREATE_FINDING_RESULT = 'ACTIVE'
+
+        http_mocks.mock_http_response(
+            json.dumps(EXPECTED_CREATE_FINDING_RESULT))
+
+        result = self.securitycenter_client.list_findings(
+            source_id=self.source_id)
+
+        for r in result:
+            print('r:', r)
+
+
+        self.assertEqual(EXPECTED_CREATE_FINDING_RESULT, result)
 
 
 if __name__ == '__main__':

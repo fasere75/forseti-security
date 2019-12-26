@@ -167,7 +167,7 @@ class SecurityCenterClient(object):
         """
         response = self.repository.findings.list(parent=source_id,
                                                  filter="state=\"ACTIVE\"",
-                                                 pageSize=500)
+                                                 pageSize=100)
         return response
 
     def update_finding(self, finding, finding_id, source_id=None):
