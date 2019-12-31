@@ -176,18 +176,13 @@ module "test_resources" {
   random_test_id                 = random_id.random_test_id.hex
 }
 
-resource "google_compute_firewall" "default" {
-  name    = "test-firewall"
-  network = "Adsf"
+resource "google_compute_firewall" "scanner-test-firewall" {
+  name    = "scanner-test-firewall"
+  network = "TODO"
   description = "Forseti test firewall rule"
 
   allow {
     protocol = "icmp"
-  }
-
-  allow {
-    protocol = "tcp"
-    ports    = ["80", "8080", "1000-2000"]
   }
 
   source_tags = ["forseti_fake_tags"]

@@ -20,6 +20,9 @@ attributes:
 - name: enforcer_allow_all_icmp_rule_name
   required: true
   type: string
+- name: scanner-test-firewall-rule-id
+  required: true
+  type: string
 - name: forseti-cai-storage-bucket
   required: true
   type: string
